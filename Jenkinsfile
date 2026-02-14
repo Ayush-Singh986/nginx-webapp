@@ -22,9 +22,15 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                sh '''
-                echo "YOUR_DOCKER_PASSWORD" | docker login -u ayush244 --password-stdin
-                '''
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    '''
+                }
             }
         }
 
@@ -37,9 +43,9 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                kubectl apply -f deployment.yaml --validate=false
-                kubectl apply -f svc.yaml --validate=false
-                kubectl apply -f hpa.yaml --validate=false
+                    kubectl apply -f deployment.yaml --validate=false
+                    kubectl apply -f svc.yaml --validate=false
+                    kubectl apply -f hpa.yaml --validate=false
                 '''
             }
         }
@@ -47,9 +53,9 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
-                kubectl get pods
-                kubectl get svc
-                kubectl get hpa
+                    kubectl get pods
+                    kubectl get svc
+                    kubectl get hpa
                 '''
             }
         }
