@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = "ayush244/nginx-webapp"
         DOCKER_TAG = "latest"
-        KUBECONFIG = "/home/jenkins/.kube/config"
     }
 
     stages {
@@ -23,13 +22,9 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
-                }
+                sh '''
+                echo "YOUR_DOCKER_PASSWORD" | docker login -u ayush244 --password-stdin
+                '''
             }
         }
 
@@ -41,19 +36,21 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh """
+                sh '''
                 kubectl apply -f deployment.yaml --validate=false
                 kubectl apply -f svc.yaml --validate=false
                 kubectl apply -f hpa.yaml --validate=false
-                """
+                '''
             }
         }
 
         stage('Verify Deployment') {
             steps {
-                sh "kubectl get pods"
-                sh "kubectl get svc"
-                sh "kubectl get hpa"
+                sh '''
+                kubectl get pods
+                kubectl get svc
+                kubectl get hpa
+                '''
             }
         }
     }
