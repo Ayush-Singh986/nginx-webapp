@@ -1,47 +1,37 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = "ayush244/nginx-webapp"
-        IMAGE_TAG  = "v1"
-    }
-
     stages {
 
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                sh 'docker build -t ayush244/nginx-webapp:v1 .'
             }
         }
 
-        stage('Login & Push to DockerHub') {
+        stage('Login & Push') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-cred',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
                 )]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push $IMAGE_NAME:$IMAGE_TAG
+                    echo "$PASS" | docker login -u "$USER" --password-stdin
+                    docker push ayush244/nginx-webapp:v1
                     '''
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy to K8s') {
             steps {
-                sh 'kubectl apply -f k8s/'
+                sh '''
+                kubectl apply -f deployment.yaml
+                kubectl apply -f svc.yaml
+                kubectl apply -f hpa.yaml
+                '''
             }
-        }
-    }
-
-    post {
-        success {
-            echo "Deployment Successful!"
-        }
-        failure {
-            echo "Pipeline Failed!"
         }
     }
 }
