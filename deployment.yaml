@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-webapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-webapp
+  template:
+    metadata:
+      labels:
+        app: nginx-webapp
+    spec:
+      containers:
+      - name: nginx-webapp
+        image: ayushsinghdev/nginx-webapp:v1
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "20m"
+          limits:
+            cpu: "100m"
